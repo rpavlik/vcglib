@@ -302,12 +302,34 @@ public:
 	{
 		_v[0] = b.X(); _v[1] = b.Y();
 	}
+	template <class EigenVector>
+	inline void FromEigenVector(const EigenVector & b)
+	{
+		_v[0] = ScalarType(b[0]);
+		_v[1] = ScalarType(b[1]);
+	}
+	template <class EigenVector>
+	inline void ToEigenVector(EigenVector & b) const
+	{
+		b[0]=_v[0];
+		b[1]=_v[1];
+	}
 		/// constructs a 2D points from an existing one of different type
 	template <class T>
 	static Point2 Construct( const Point2<T> & b )
 	{
     return Point2(b.X(),b.Y());
 	}
+
+	static inline Point2 Zero(void)
+    {
+      return Point2(0,0);
+    }
+
+    static inline Point2 One(void)
+    {
+      return Point2(1,1);
+    }
 
 
 }; // end class definition

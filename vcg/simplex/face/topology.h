@@ -24,9 +24,6 @@
 #ifndef _VCG_FACE_TOPOLOGY
 #define _VCG_FACE_TOPOLOGY
 
-#include <vcg/simplex/face/pos.h>
-#include <set>
-
 namespace vcg {
 namespace face {
 /** \addtogroup face */
@@ -110,6 +107,16 @@ inline typename FaceType::ScalarType DihedralAngleRad(FaceType & f,  const int i
 
   if(sign > 0 ) return angleRad;
   else return -angleRad;
+}
+
+/// Return the internal angle (in radians) of the i-th wedge of the triangle.
+template <class FaceType>
+inline typename FaceType::ScalarType WedgeAngleRad(FaceType & f,  const int i )
+{
+  auto &P0=f.P(i);
+  auto &P1=f.P(f.Next(i));
+  auto &P2=f.P(f.Prev(i));
+  return vcg::Angle(P2 - P0,P1 - P0);  
 }
 
 /// Count border edges of the face
@@ -704,6 +711,22 @@ void FlipEdge(FaceType &f, const int z)
 }
 
 template <class FaceType>
+void TriSplit(FaceType *fToSplit, FaceType *newf0, FaceType *newf1, typename FaceType::VertexType *newVert)
+{
+  typedef typename FaceType::VertexType VertexType;
+  
+  VertexType *vp0 = fToSplit->V(0);
+  VertexType *vp1 = fToSplit->V(1);
+  VertexType *vp2 = fToSplit->V(2);
+  
+  fToSplit->V(0) = vp0; fToSplit->V(1) = vp1; fToSplit->V(2) = newVert;
+  newf0->V(0) = vp1; newf0->V(1) = vp2; newf0->V(2) = newVert;
+  newf1->V(0) = vp2; newf1->V(1) = vp0; newf1->V(2) = newVert;    
+}
+
+
+
+template <class FaceType>
 void VFDetach(FaceType & f)
 {
   VFDetach(f,0);
@@ -771,19 +794,20 @@ void VFAppend(FaceType* & f, int z)
 template <class FaceType>
 void VVStarVF( typename FaceType::VertexType* vp, std::vector<typename FaceType::VertexType *> &starVec)
 {
-    typedef typename FaceType::VertexType* VertexPointer;
-    starVec.clear();
-    face::VFIterator<FaceType> vfi(vp);
-    while(!vfi.End())
-            {
-                starVec.push_back(vfi.F()->V1(vfi.I()));
-                starVec.push_back(vfi.F()->V2(vfi.I()));
-                ++vfi;
-            }
+	typedef typename FaceType::VertexType* VertexPointer;
+	starVec.clear();
+	face::VFIterator<FaceType> vfi(vp);
+	while(!vfi.End())
+	{
+		const int vn = vfi.F()->VN();
+		starVec.push_back(vfi.F()->V1(vfi.I()));
+		starVec.push_back(vfi.F()->V((vfi.I()+vn-1)%vn));
+		++vfi;
+	}
 
-    std::sort(starVec.begin(),starVec.end());
-    typename std::vector<VertexPointer>::iterator new_end = std::unique(starVec.begin(),starVec.end());
-    starVec.resize(new_end-starVec.begin());
+	std::sort(starVec.begin(),starVec.end());
+	typename std::vector<VertexPointer>::iterator new_end = std::unique(starVec.begin(),starVec.end());
+	starVec.resize(new_end-starVec.begin());
 }
 
 /*!
