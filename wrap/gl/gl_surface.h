@@ -36,7 +36,7 @@ First Commit.
 #define VCGLIB_GL_SURFACE_H
 
 #include <vector>
-#include <GL/glew.h>
+// #include <GL/glew.h>
 
 namespace vcg
 {
